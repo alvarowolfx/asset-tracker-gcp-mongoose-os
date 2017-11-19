@@ -1,0 +1,43 @@
+author: mongoose-os
+description: A Mongoose OS app skeleton
+version: 1.0
+
+libs_version: ${mos.version}
+modules_version: ${mos.version}
+mongoose_os_version: ${mos.version}
+
+# Optional. List of tags for online search.
+tags:
+  - c
+
+# List of files / directories with C sources. No slashes at the end of dir names.
+sources:
+  - src
+
+# List of dirs. Files from these dirs will be copied to the device filesystem
+filesystem:
+  - fs
+
+config_schema:
+  - ["pppos.enable", true]
+  - ["pppos.uart_no", 1]        
+  - ["pppos.baud_rate", 115200]
+  - ["pppos.apn", "timbrasil.br"]
+  - ["pppos.user", "tim"]
+  - ["pppos.pass", "tim"]
+  - ["pppos.connect_cmd", "ATD*99***1#"]
+
+#AT+CFUN=1,1\r\n
+
+# List of libraries used by this app, in order of initialisation
+libs:
+  - origin: https://github.com/mongoose-os-libs/ca-bundle
+  - origin: https://github.com/mongoose-os-libs/rpc-service-config
+  - origin: https://github.com/mongoose-os-libs/rpc-service-fs
+  - origin: https://github.com/mongoose-os-libs/rpc-uart
+  - origin: https://github.com/mongoose-os-libs/wifi
+  - origin: https://github.com/mongoose-os-libs/pppos
+  - origin: https://github.com/mongoose-os-libs/mjs
+
+# Used by the mos tool to catch mos binaries incompatible with this file format
+manifest_version: 2017-05-18
