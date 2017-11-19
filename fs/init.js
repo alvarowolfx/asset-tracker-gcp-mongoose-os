@@ -16,41 +16,6 @@ let deviceName = Cfg.get('device.id');
 let topic = '/devices/' + deviceName + '/events';
 print('Topic: ', topic);
 
-/*
-let gpsUart = 1;
-
-UART.setConfig(gpsUart, {
-  baudRate: 9600,
-  rxBufSize: 1024,
-  txBufSize: 1024
-});
-
-let available = false;
-function gpsConsume() {
-  UART.setDispatcher(
-    gpsUart,
-    function(uartNo, ud) {
-      let ra = UART.readAvail(uartNo);
-      let oa = UART.writeAvail(uartNo);
-
-      if (ra > 100) {
-        available = true;
-        //let cmds = data.split('$');
-
-        //for(let i = 0; i < cmds.length; i++){
-        //print(cmds[i]);
-        //}
-      }
-    },
-    null
-  );
-
-  UART.setRxEnabled(gpsUart, true);
-}
-
-//gpsConsume();
-*/
-
 function getTemp() {
   return (ESP32.temp() - 32) * 5 / 9;
 }
@@ -100,13 +65,6 @@ Timer.set(
     if (isConnected) {
       //callWebhook();
     }
-    /*
-    if (available) {
-      let data = UART.read(gpsUart);
-      print('Received UART data:', data);
-      available = false;
-    }
-    */
   },
   null
 );
