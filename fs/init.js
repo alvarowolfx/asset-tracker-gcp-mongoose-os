@@ -12,9 +12,20 @@ let webhook =
   'http://maker.ifttt.com/trigger/mongoose_event/with/key/' + makerKey;
 
 let isConnected = false;
+let isGPSLocked = false;
+let telemetrySend = false;
 let deviceName = Cfg.get('device.id');
 let topic = '/devices/' + deviceName + '/events';
 print('Topic: ', topic);
+
+let gpsStatusPin = 33;
+let gsmStatusPin = 32;
+
+GPIO.set_mode(gpsStatusPin, GPIO.MODE_OUTPUT);
+GPIO.set_mode(gsmStatusPin, GPIO.MODE_OUTPUT);
+
+GPIO.write(gpsStatusPin, 0);
+GPIO.write(gsmStatusPin, 0);
 
 function getTemp() {
   return (ESP32.temp() - 32) * 5 / 9;
@@ -23,7 +34,16 @@ function getTemp() {
 let getLatLon = ffi('char *get_lat_lon()');
 
 function getParsedLatLon() {
-  return JSON.parse(getLatLon());
+  let latlon = getLatLon();
+  let jsonParsed = JSON.parse(latlon);
+  if (
+    jsonParsed.s === 'nan' ||
+    jsonParsed.lon === 'nan' ||
+    jsonParsed.lat === 'nan'
+  ) {
+    return false;
+  }
+  return jsonParsed;
 }
 
 let getInfo = function() {
@@ -58,12 +78,28 @@ let callWebhook = function() {
 };
 
 Timer.set(
+  2000,
+  true,
+  function() {
+    let geo = getParsedLatLon();
+    if (geo) {
+      isGPSLocked = true;
+      GPIO.write(gpsStatusPin, 1);
+    } else {
+      isGPSLocked = false;
+      GPIO.write(gpsStatusPin, 0);
+    }
+  },
+  null
+);
+
+Timer.set(
   5000,
   true,
   function() {
-    print('Info:', getInfo());
-    if (isConnected) {
-      //callWebhook();
+    if (isConnected && isGPSLocked && !telemetrySend) {
+      callWebhook();
+      telemetrySend = true;
     }
   },
   null
@@ -75,6 +111,7 @@ Net.setStatusEventHandler(function(ev, arg) {
   if (ev === Net.STATUS_DISCONNECTED) {
     evs = 'DISCONNECTED';
     isConnected = false;
+    GPIO.write(gsmStatusPin, 0);
   } else if (ev === Net.STATUS_CONNECTING) {
     evs = 'CONNECTING';
   } else if (ev === Net.STATUS_CONNECTED) {
@@ -82,7 +119,7 @@ Net.setStatusEventHandler(function(ev, arg) {
   } else if (ev === Net.STATUS_GOT_IP) {
     evs = 'GOT_IP';
     isConnected = true;
-    callWebhook();
+    GPIO.write(gsmStatusPin, 1);
   }
   print('== Net event:', ev, evs);
 }, null);
