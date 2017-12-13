@@ -1,5 +1,5 @@
-author: mongoose-os
-description: A Mongoose OS app skeleton
+author: Alvaro Viebrantz
+description: An asset tracker project
 version: 1.0
 
 libs_version: ${mos.version}
@@ -9,6 +9,9 @@ mongoose_os_version: ${mos.version}
 # Optional. List of tags for online search.
 tags:
   - c
+
+includes:
+  - include
 
 # List of files / directories with C sources. No slashes at the end of dir names.
 sources:
@@ -25,9 +28,10 @@ config_schema:
   - ["pppos.apn", "timbrasil.br"]
   - ["pppos.user", "tim"]
   - ["pppos.pass", "tim"]
-  - ["pppos.connect_cmd", "ATD*99***1#"]
-
-#AT+CFUN=1,1\r\n
+  - ["pppos.connect_cmd", "ATD*99***1#"]  
+  - ["gps.uart_no", 2]
+  - ["gps.baud_rate", 9600]
+  - ["gps.update_interval", 2000]
 
 # List of libraries used by this app, in order of initialisation
 libs:
@@ -38,6 +42,7 @@ libs:
   - origin: https://github.com/mongoose-os-libs/wifi
   - origin: https://github.com/mongoose-os-libs/pppos
   - origin: https://github.com/mongoose-os-libs/mjs
+  - origin: https://github.com/alvarowolfx/gps
 
 # Used by the mos tool to catch mos binaries incompatible with this file format
-manifest_version: 2017-05-18
+manifest_version: 2017-09-29

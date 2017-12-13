@@ -6,8 +6,9 @@ load('api_http.js');
 load('api_sys.js');
 load('api_timer.js');
 load('api_esp32.js');
+load('api_gps.js');
 
-let makerKey = 'YOUR_IFTTT_KEY';
+let makerKey = 'bXJg1-pDZzQcM8xZn7Dl6y';
 let webhook =
   'http://maker.ifttt.com/trigger/mongoose_event/with/key/' + makerKey;
 
@@ -31,19 +32,8 @@ function getTemp() {
   return (ESP32.temp() - 32) * 5 / 9;
 }
 
-let getLatLon = ffi('char *get_lat_lon()');
-
 function getParsedLatLon() {
-  let latlon = getLatLon();
-  let jsonParsed = JSON.parse(latlon);
-  if (
-    jsonParsed.s === 'nan' ||
-    jsonParsed.lon === 'nan' ||
-    jsonParsed.lat === 'nan'
-  ) {
-    return false;
-  }
-  return jsonParsed;
+  return GPS.getLocation();
 }
 
 let getInfo = function() {
