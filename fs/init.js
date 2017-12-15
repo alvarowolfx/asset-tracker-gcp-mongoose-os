@@ -2,21 +2,19 @@ load('api_config.js');
 load('api_uart.js');
 load('api_gpio.js');
 load('api_net.js');
-load('api_http.js');
+load('api_mqtt.js');
 load('api_sys.js');
 load('api_timer.js');
 load('api_esp32.js');
 load('api_gps.js');
-
-let makerKey = 'bXJg1-pDZzQcM8xZn7Dl6y';
-let webhook =
-  'http://maker.ifttt.com/trigger/mongoose_event/with/key/' + makerKey;
 
 let isConnected = false;
 let isGPSLocked = false;
 let telemetrySend = false;
 let deviceName = Cfg.get('device.id');
 let topic = '/devices/' + deviceName + '/events';
+//let stateTopic = '/devices/' + deviceName + '/state';
+let configTopic = '/devices/' + deviceName + '/config';
 print('Topic: ', topic);
 
 let gpsStatusPin = 33;
@@ -45,30 +43,38 @@ let getInfo = function() {
   });
 };
 
-let callWebhook = function() {
-  print('call webhook');
+function publishData() {
+  let msg = getInfo();
+  let ok = MQTT.pub(topic, msg);
+  if (ok) {
+    print('Published');
+  } else {
+    print('Error publishing');
+  }
+  return ok;
+}
 
-  let geo = getParsedLatLon();
-  let params =
-    '?value1=' +
-    JSON.stringify(geo.sp) +
-    '&value2=' +
-    JSON.stringify(geo.lat) +
-    '&value3=' +
-    JSON.stringify(geo.lon);
-  HTTP.query({
-    url: webhook + params,
-    success: function(body, full_http_msg) {
-      print('Success:', body);
+let updateTimerId = null;
+function setUpdateTimer() {
+  if (updateTimerId) {
+    Timer.del(updateTimerId);
+  }
+  let updateInterval = Cfg.get('app.update_interval');
+  print('Setting timer with ', updateInterval, ' seconds interval');
+  updateTimerId = Timer.set(
+    updateInterval * 1000,
+    true,
+    function() {
+      print('Should send telemetry');
+      telemetrySend = false;
     },
-    error: function(err) {
-      print('Err:', err);
-    } // Optional
-  });
-};
+    null
+  );
+}
+setUpdateTimer();
 
 Timer.set(
-  2000,
+  1000,
   true,
   function() {
     let geo = getParsedLatLon();
@@ -88,12 +94,33 @@ Timer.set(
   true,
   function() {
     if (isConnected && isGPSLocked && !telemetrySend) {
-      callWebhook();
-      telemetrySend = true;
+      let ok = publishData();
+      telemetrySend = ok;
     }
   },
   null
 );
+
+MQTT.sub(
+  configTopic,
+  function(conn, topic, msg) {
+    print('Got config update:', msg.slice(0, 100));
+    let obj = JSON.parse(msg);
+    if (obj) {
+      Cfg.set({ app: obj });
+    }
+    setUpdateTimer();
+  },
+  null
+);
+
+MQTT.setEventHandler(function(conn, ev) {
+  if (ev === MQTT.EV_CONNACK) {
+    print('MQTT CONNECTED');
+    isConnected = true;
+    GPIO.write(gsmStatusPin, 1);
+  }
+}, null);
 
 // Monitor network connectivity.
 Net.setStatusEventHandler(function(ev, arg) {
@@ -108,8 +135,6 @@ Net.setStatusEventHandler(function(ev, arg) {
     evs = 'CONNECTED';
   } else if (ev === Net.STATUS_GOT_IP) {
     evs = 'GOT_IP';
-    isConnected = true;
-    GPIO.write(gsmStatusPin, 1);
   }
   print('== Net event:', ev, evs);
 }, null);
