@@ -1,3 +1,5 @@
 bla
 build
 deps
+libs
+*.pem
