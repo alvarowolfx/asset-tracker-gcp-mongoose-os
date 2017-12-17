@@ -3,3 +3,4 @@ build
 deps
 libs
 *.pem
+node_modules
