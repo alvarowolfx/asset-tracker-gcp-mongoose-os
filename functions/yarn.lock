@@ -794,6 +794,10 @@ gcs-resumable-upload@^0.8.2:
     stream-events "^1.0.1"
     through2 "^2.0.0"
 
+geopoint@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/geopoint/-/geopoint-1.0.1.tgz#08db0048b4cb935badd5f9a2c0b2e207ca4b7f24"
+
 getpass@^0.1.1:
   version "0.1.7"
   resolved "https://registry.yarnpkg.com/getpass/-/getpass-0.1.7.tgz#5eff8e3e684d569ae4cb2b1282604e8ba62149fa"

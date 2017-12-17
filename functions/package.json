@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "firebase-admin": "~5.4.2",
-    "firebase-functions": "^0.7.1"
+    "firebase-functions": "^0.7.1",
+    "geopoint": "^1.0.1"
   },
   "private": true
 }

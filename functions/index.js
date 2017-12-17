@@ -1,10 +1,13 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const Geopoint = require('geopoint');
 
 admin.initializeApp(functions.config().firebase);
 
-const GeoPoint = admin.firestore.GeoPoint;
+const GeoPointFirestore = admin.firestore.GeoPoint;
 const db = admin.firestore();
+
+const DISTANCE_THRESHOLD = 0.1; // 100 meters
 
 /**
  * Receive data from pubsub, then
@@ -29,25 +32,45 @@ exports.receiveTelemetry = functions.pubsub
       deviceTotalRam: message.total_ram
     };
 
-    // TODO See if a major change in location happened
-    // Then insert on position_logs collection on Firestore
+    let deviceRef = db.collection('devices').doc(deviceId);
 
-    return Promise.all([
-      updateCurrentDataFirestore(data),
-      insertLocationLog(data)
-    ]);
+    return deviceRef.get().then(doc => {
+      if (!doc.exists) {
+        return Promise.all([
+          updateCurrentDataFirestore(deviceRef, data, 'MOVING'),
+          insertLocationLog(deviceRef, data)
+        ]);
+      }
+      let device = doc.data();
+
+      let lastLocation = new Geopoint(
+        device.location.latitude,
+        device.location.longitude
+      );
+      let newLocation = new Geopoint(data.latitude, data.longitude);
+      let distanceKm = lastLocation.distanceTo(newLocation, true);
+
+      if (distanceKm >= DISTANCE_THRESHOLD) {
+        return Promise.all([
+          updateCurrentDataFirestore(deviceRef, data, 'MOVING'),
+          insertLocationLog(deviceRef, data)
+        ]);
+      } else {
+        return updateCurrentDataFirestore(deviceRef, data, 'STOPPED');
+      }
+    });
   });
 
 /**
  * Maintain last status in Firestore
  */
-function updateCurrentDataFirestore(data) {
-  let deviceRef = db.collection('devices').doc(data.deviceId);
-  let location = new GeoPoint(data.latitude, data.longitude);
+function updateCurrentDataFirestore(deviceRef, data, state) {
+  let location = new GeoPointFirestore(data.latitude, data.longitude);
 
   return deviceRef.set(
     {
       location,
+      state,
       lastTimestamp: data.timestamp,
       speed: data.speed,
       deviceTemperature: data.deviceTemperature,
@@ -61,13 +84,12 @@ function updateCurrentDataFirestore(data) {
 /**
  * Store all the log data in sub collection
  */
-function insertLocationLog(data) {
-  let deviceRef = db.collection('devices').doc(data.deviceId);
-  let location = new GeoPoint(data.latitude, data.longitude);
+function insertLocationLog(deviceRef, data) {
+  let location = new GeoPointFirestore(data.latitude, data.longitude);
 
   return deviceRef.collection('location_logs').add({
+    location,
     timestamp: data.timestamp,
-    speed: data.speed,
-    location
+    speed: data.speed
   });
 }
