@@ -7,7 +7,7 @@ admin.initializeApp(functions.config().firebase);
 const GeoPointFirestore = admin.firestore.GeoPoint;
 const db = admin.firestore();
 
-const DISTANCE_THRESHOLD = 0.1; // 100 meters
+const DISTANCE_THRESHOLD = 0.05; // 50 meters
 
 /**
  * Receive data from pubsub, then
@@ -41,13 +41,15 @@ exports.receiveTelemetry = functions.pubsub
           insertLocationLog(deviceRef, data)
         ]);
       }
+
       let device = doc.data();
 
+      let newLocation = new Geopoint(data.latitude, data.longitude);
       let lastLocation = new Geopoint(
         device.location.latitude,
         device.location.longitude
       );
-      let newLocation = new Geopoint(data.latitude, data.longitude);
+
       let distanceKm = lastLocation.distanceTo(newLocation, true);
 
       if (distanceKm >= DISTANCE_THRESHOLD) {
