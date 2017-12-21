@@ -18,13 +18,16 @@ let configTopic = '/devices/' + deviceName + '/config';
 print('Topic: ', topic);
 
 let gpsStatusPin = 33;
-let gsmStatusPin = 32;
+let gsmStatusPin = 5; // connect to 32
+let gsmSwitchPin = 14;
 
 GPIO.set_mode(gpsStatusPin, GPIO.MODE_OUTPUT);
 GPIO.set_mode(gsmStatusPin, GPIO.MODE_OUTPUT);
+GPIO.set_mode(gsmSwitchPin, GPIO.MODE_OUTPUT);
 
-GPIO.write(gpsStatusPin, 0);
-GPIO.write(gsmStatusPin, 0);
+GPIO.write(gpsStatusPin, 0); // Turn off gps led
+GPIO.write(gsmStatusPin, 1); // Turn off gsm led
+GPIO.write(gsmSwitchPin, 1); // Turn on gsm module
 
 function getTemp() {
   return (ESP32.temp() - 32) * 5 / 9;
@@ -66,6 +69,9 @@ function setUpdateTimer() {
     true,
     function() {
       print('Should send telemetry');
+      if (!telemetrySend) {
+        Sys.reboot(2 * 1000 * 1000);
+      }
       telemetrySend = false;
     },
     null
@@ -73,7 +79,8 @@ function setUpdateTimer() {
 }
 setUpdateTimer();
 
-Timer.set(
+let gpsTimerId = null;
+gpsTimerId = Timer.set(
   1000,
   true,
   function() {
@@ -96,6 +103,25 @@ Timer.set(
     if (isConnected && isGPSLocked && !telemetrySend) {
       let ok = publishData();
       telemetrySend = ok;
+
+      if (telemetrySend) {
+        Timer.del(gpsTimerId);
+        Timer.del(updateTimerId);
+        Timer.set(
+          8000,
+          false,
+          function() {
+            GPIO.write(gpsStatusPin, 0); // Turn off gps led
+            GPIO.write(gsmStatusPin, 1); // Turn off gsm led
+            GPIO.write(gsmSwitchPin, 0); // Turn off gsm module
+
+            let updateInterval = Cfg.get('app.update_interval');
+
+            ESP32.deepSleep(updateInterval * 1000 * 1000);
+          },
+          null
+        );
+      }
     }
   },
   null
@@ -118,7 +144,7 @@ MQTT.setEventHandler(function(conn, ev) {
   if (ev === MQTT.EV_CONNACK) {
     print('MQTT CONNECTED');
     isConnected = true;
-    GPIO.write(gsmStatusPin, 1);
+    GPIO.write(gsmStatusPin, 0);
   }
 }, null);
 
@@ -128,7 +154,7 @@ Net.setStatusEventHandler(function(ev, arg) {
   if (ev === Net.STATUS_DISCONNECTED) {
     evs = 'DISCONNECTED';
     isConnected = false;
-    GPIO.write(gsmStatusPin, 0);
+    GPIO.write(gsmStatusPin, 1);
   } else if (ev === Net.STATUS_CONNECTING) {
     evs = 'CONNECTING';
   } else if (ev === Net.STATUS_CONNECTED) {
