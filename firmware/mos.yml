@@ -2,9 +2,9 @@ author: Alvaro Viebrantz
 description: An asset tracker project
 version: 1.0
 
-libs_version: ${mos.version}
-modules_version: ${mos.version}
-mongoose_os_version: ${mos.version}
+libs_version: 1.21
+modules_version: 1.21
+mongoose_os_version: 1.21
 
 # Optional. List of tags for online search.
 tags:
@@ -34,7 +34,8 @@ config_schema:
   - ["gps.uart_no", 2]
   - ["gps.baud_rate", 9600]
   - ["gps.update_interval", 2000]
-
+  - ["wifi.sta.enable", false]
+  
 # List of libraries used by this app, in order of initialisation
 libs:
   - origin: https://github.com/mongoose-os-libs/ca-bundle

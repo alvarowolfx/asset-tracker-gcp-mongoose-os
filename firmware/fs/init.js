@@ -18,7 +18,7 @@ let configTopic = '/devices/' + deviceName + '/config';
 print('Topic: ', topic);
 
 let gpsStatusPin = 33;
-let gsmStatusPin = 5; // connect to 32
+let gsmStatusPin = 32; // connect to 32
 let gsmSwitchPin = 14;
 
 GPIO.set_mode(gpsStatusPin, GPIO.MODE_OUTPUT);
@@ -26,7 +26,7 @@ GPIO.set_mode(gsmStatusPin, GPIO.MODE_OUTPUT);
 GPIO.set_mode(gsmSwitchPin, GPIO.MODE_OUTPUT);
 
 GPIO.write(gpsStatusPin, 0); // Turn off gps led
-GPIO.write(gsmStatusPin, 1); // Turn off gsm led
+GPIO.write(gsmStatusPin, 0); // Turn off gsm led
 GPIO.write(gsmSwitchPin, 1); // Turn on gsm module
 
 function getTemp() {
@@ -112,7 +112,7 @@ Timer.set(
           false,
           function() {
             GPIO.write(gpsStatusPin, 0); // Turn off gps led
-            GPIO.write(gsmStatusPin, 1); // Turn off gsm led
+            GPIO.write(gsmStatusPin, 0); // Turn off gsm led
             GPIO.write(gsmSwitchPin, 0); // Turn off gsm module
 
             let updateInterval = Cfg.get('app.update_interval');
@@ -131,6 +131,9 @@ MQTT.sub(
   configTopic,
   function(conn, topic, msg) {
     print('Got config update:', msg.slice(0, 100));
+    if (!msg) {
+      return;
+    }
     let obj = JSON.parse(msg);
     if (obj) {
       Cfg.set({ app: obj });
@@ -144,7 +147,7 @@ MQTT.setEventHandler(function(conn, ev) {
   if (ev === MQTT.EV_CONNACK) {
     print('MQTT CONNECTED');
     isConnected = true;
-    GPIO.write(gsmStatusPin, 0);
+    GPIO.write(gsmStatusPin, 1);
   }
 }, null);
 
@@ -154,7 +157,7 @@ Net.setStatusEventHandler(function(ev, arg) {
   if (ev === Net.STATUS_DISCONNECTED) {
     evs = 'DISCONNECTED';
     isConnected = false;
-    GPIO.write(gsmStatusPin, 1);
+    GPIO.write(gsmStatusPin, 0);
   } else if (ev === Net.STATUS_CONNECTING) {
     evs = 'CONNECTING';
   } else if (ev === Net.STATUS_CONNECTED) {
