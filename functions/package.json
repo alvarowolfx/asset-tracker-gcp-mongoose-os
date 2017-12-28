@@ -11,7 +11,9 @@
   "dependencies": {
     "firebase-admin": "~5.4.2",
     "firebase-functions": "^0.7.1",
-    "geopoint": "^1.0.1"
+    "geopoint": "^1.0.1",
+    "google-cloud": "^0.57.0",
+    "googleapis": "^23.0.0"
   },
   "private": true
 }
