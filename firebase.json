@@ -7,6 +7,7 @@
     "public": "build",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
+      { "source": "/updateDeviceConfig", "function": "updateDeviceConfig" },
       {
         "source": "**",
         "destination": "/index.html"

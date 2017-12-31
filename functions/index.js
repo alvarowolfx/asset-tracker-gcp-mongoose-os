@@ -56,7 +56,7 @@ exports.updateDeviceConfig = functions.https.onRequest((req, res) => {
   getCloudIoTClient()
     .then(client => {
       const device_name = `projects/${PROJECT_ID}/locations/${REGION}/registries/${REGISTRY}/devices/${deviceId}`;
-      console.log(device_name);
+      //console.log(device_name);
 
       const newConfig = { update_interval: updateInterval };
       const data = new Buffer(JSON.stringify(newConfig), 'utf-8');
@@ -118,10 +118,13 @@ exports.receiveTelemetry = functions.pubsub
 
     return deviceRef.get().then(doc => {
       if (!doc.exists) {
+        data.state = 'MOVING';
         return Promise.all([
-          updateCurrentDataFirestore(deviceRef, data, 'MOVING'),
+          updateCurrentDataFirestore(deviceRef, data),
           insertLocationLog(deviceRef, data)
-        ]);
+        ]).then(() => {
+          return updateDeviceDateIndex(deviceRef, data, {});
+        });
       }
 
       let device = doc.data();
@@ -139,7 +142,9 @@ exports.receiveTelemetry = functions.pubsub
         return Promise.all([
           updateCurrentDataFirestore(deviceRef, data),
           insertLocationLog(deviceRef, data)
-        ]);
+        ]).then(() => {
+          return updateDeviceDateIndex(deviceRef, data, device.dateIndex);
+        });
       } else {
         data.state = 'STOPPED';
         return updateCurrentDataFirestore(deviceRef, data);
@@ -156,6 +161,7 @@ function updateCurrentDataFirestore(deviceRef, data) {
   return deviceRef.set(
     {
       location,
+      state: data.state,
       lastTimestamp: data.timestamp,
       speed: data.speed,
       deviceTemperature: data.deviceTemperature,
@@ -176,5 +182,21 @@ function insertLocationLog(deviceRef, data) {
     location,
     timestamp: data.timestamp,
     speed: data.speed
+  });
+}
+
+/**
+ * Update device date index with all days that have data
+ */
+function updateDeviceDateIndex(deviceRef, data, dateIndex) {
+  const key = data.timestamp.toJSON().substring(0, 10);
+  const count = dateIndex[key];
+  if (!count) {
+    dateIndex[key] = 1;
+  } else {
+    dateIndex[key] = count + 1;
+  }
+  return deviceRef.update({
+    dateIndex
   });
 }
