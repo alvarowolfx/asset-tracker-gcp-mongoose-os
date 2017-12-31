@@ -1,0 +1,7 @@
+{
+  "plugins": [
+    "transform-es3-property-literals",
+    "transform-es3-property-literals"
+  ],
+  "presets": ["env", "react", "stage-0", "es2015"]
+}

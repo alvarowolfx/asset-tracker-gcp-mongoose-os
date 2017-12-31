@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Asset Tracker",
+  "name": "Asset Tracker with Cloud IoT Core",
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,6 +10,7 @@
   ],
   "start_url": "./index.html",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#3748AC",
+  "background_color": "#ffffff",
+  "gcm_sender_id": "103953800507"
 }
