@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import groupBy from 'lodash/groupBy';
+import moment from 'moment';
 
 import Typography from 'material-ui/Typography';
 
@@ -41,7 +42,7 @@ class DataFilterForm extends Component {
 
     let selectedYear = currentValue.getFullYear();
     let selectedMonth = currentValue.getMonth() + 1;
-    let selectedDay = currentValue.getDate() + 1;
+    let selectedDay = currentValue.getDate();
 
     const groupedByYears = groupBy(props.validDates, date =>
       date.substring(0, 4)
@@ -113,7 +114,10 @@ class DataFilterForm extends Component {
 
   triggerDateChange = () => {
     const { selectedYear, selectedMonth, selectedDay } = this.state;
-    const date = new Date(`${selectedYear}-${selectedMonth}-${selectedDay}`);
+    const date = moment(
+      `${selectedYear}${selectedMonth}${selectedDay}`,
+      'YYYYMMDD'
+    ).toDate();
 
     this.props.onChange && this.props.onChange(date);
   };
