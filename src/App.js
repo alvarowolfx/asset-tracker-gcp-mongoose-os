@@ -76,7 +76,7 @@ class App extends Component {
 
     if (!dateFilter) {
       const dates = Object.keys(device.dateIndex);
-      dateFilter = moment(dates[dates.length - 1], 'YYYY-MM-DD').toDate();
+      dateFilter = moment(dates[0], 'YYYY-MM-DD').toDate();
     }
 
     const nextDay = new Date(dateFilter);
@@ -137,11 +137,13 @@ class App extends Component {
     //const BASE_URL = 'https://asset-tracker-iot.firebaseapp.com';
     const url = BASE_URL + '/updateDeviceConfig?' + queryParams;
     //console.log(url);
-
-    const res = await fetch(url);
-    await res.json();
-
-    alert('Device config updated.');
+    try {
+      const res = await fetch(url);
+      await res.json();
+      alert('Device config updated.');
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   handleDateFilterChange = date => {
