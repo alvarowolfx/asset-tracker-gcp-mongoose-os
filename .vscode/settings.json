@@ -1,0 +1,5 @@
+{
+    "terminal.integrated.env.osx": {
+        "PATH": "/Users/alvaroviebrantz/.platformio/penv/bin:/Users/alvaroviebrantz/.mos/bin:/Users/alvaroviebrantz/.fastlane/bin:/Users/alvaroviebrantz/.composer/vendor/bin:/usr/local/protoc/bin:/Users/alvaroviebrantz/Documents/Desenvolvimento/flutter/bin:/usr/local/bin:/Users/alvaroviebrantz/google-cloud-sdk/bin:/Users/alvaroviebrantz/.nvm/versions/node/v7.7.1/bin:/Users/alvaroviebrantz/Documents/Desenvolvimento/Go/gocode/bin:/usr/local/go/bin:/usr/local/go_appengine/:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/share/dotnet:/usr/local/go/bin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/usr/local/bin:/Users/alvaroviebrantz/Documents/Desenvolvimento/Java/Android/sdk/tools:/Users/alvaroviebrantz/Documents/Desenvolvimento/Java/Android/sdk/platform-tools:/Users/alvaroviebrantz/Documents/Desenvolvimento/Java/Android/sdk/ndk-bundle/:/usr/local/elasticsearch-1.5.2/bin:/Applications/Postgres.app/Contents/Versions/9.3/bin:/usr/local/mysql/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+    }
+}
