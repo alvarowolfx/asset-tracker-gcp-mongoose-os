@@ -58,6 +58,27 @@ function publishData() {
 }
 
 let updateTimerId = null;
+let gpsTimerId = null;
+function goToSleep() {
+  print('Sleeping');
+  Timer.del(gpsTimerId);
+  Timer.del(updateTimerId);
+  GPIO.write(gpsStatusPin, 0); // Turn off gps led
+  GPIO.write(gsmStatusPin, 0); // Turn off gsm led
+  GPIO.write(gsmSwitchPin, 0); // Turn off gsm module
+  Timer.set(
+    8000,
+    false,
+    function() {
+      let updateInterval = Cfg.get('app.update_interval');
+
+      ESP32.deepSleep(updateInterval * 1000 * 1000);
+    },
+    null
+  );
+}
+
+let sendTelemetryTries = 0;
 function setUpdateTimer() {
   if (updateTimerId) {
     Timer.del(updateTimerId);
@@ -69,8 +90,10 @@ function setUpdateTimer() {
     true,
     function() {
       print('Should send telemetry');
-      if (!telemetrySend) {
-        Sys.reboot(2 * 1000 * 1000);
+      sendTelemetryTries = sendTelemetryTries + 1;
+      if (sendTelemetryTries > 1 && !telemetrySend) {
+        //Sys.reboot(2 * 1000 * 1000);
+        goToSleep();
       }
       telemetrySend = false;
     },
@@ -79,7 +102,6 @@ function setUpdateTimer() {
 }
 setUpdateTimer();
 
-let gpsTimerId = null;
 gpsTimerId = Timer.set(
   1000,
   true,
@@ -105,22 +127,7 @@ Timer.set(
       telemetrySend = ok;
 
       if (telemetrySend) {
-        Timer.del(gpsTimerId);
-        Timer.del(updateTimerId);
-        Timer.set(
-          8000,
-          false,
-          function() {
-            GPIO.write(gpsStatusPin, 0); // Turn off gps led
-            GPIO.write(gsmStatusPin, 0); // Turn off gsm led
-            GPIO.write(gsmSwitchPin, 0); // Turn off gsm module
-
-            let updateInterval = Cfg.get('app.update_interval');
-
-            ESP32.deepSleep(updateInterval * 1000 * 1000);
-          },
-          null
-        );
+        goToSleep();
       }
     }
   },
