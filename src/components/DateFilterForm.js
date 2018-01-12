@@ -34,17 +34,11 @@ class DataFilterForm extends Component {
   };
 
   componentWillMount() {
-    this.loadVariables(this.props);
+    this.loadVariablesFromProps(this.props);
   }
 
-  loadVariables(props) {
-    let currentValue = props.value || new Date();
-
-    let selectedYear = currentValue.getFullYear();
-    let selectedMonth = currentValue.getMonth() + 1;
-    let selectedDay = currentValue.getDate();
-
-    const groupedByYears = groupBy(props.validDates, date =>
+  loadVariables(selectedYear, selectedMonth, selectedDay) {
+    const groupedByYears = groupBy(this.props.validDates, date =>
       date.substring(0, 4)
     );
     const year = groupedByYears[selectedYear];
@@ -69,6 +63,12 @@ class DataFilterForm extends Component {
       selectedDay = Object.keys(groupedByDays)[0];
     }
 
+    const {
+      selectedYear: oldYear,
+      selectedMonth: oldMonth,
+      selectedDay: oldDay
+    } = this.state;
+
     let newState = {
       selectedYear,
       selectedMonth,
@@ -78,47 +78,46 @@ class DataFilterForm extends Component {
       groupedByYears
     };
 
-    this.setState(newState);
+    if (
+      oldYear !== selectedYear ||
+      oldMonth !== selectedMonth ||
+      oldDay !== selectedDay
+    ) {
+      this.setState(newState, this.triggerDateChange);
+    }
+  }
+
+  loadVariablesFromProps(props) {
+    let currentValue = props.value || new Date();
+    let selectedYear = currentValue.getFullYear();
+    let selectedMonth = currentValue.getMonth() + 1;
+    let selectedDay = currentValue.getDate();
+    this.loadVariables(selectedYear, selectedMonth, selectedDay);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.loadVariables(nextProps);
+    this.loadVariablesFromProps(nextProps);
   }
 
   onYearSelected = year => {
-    this.setState(
-      {
-        selectedYear: year
-      },
-      this.triggerDateChange
-    );
+    const { selectedMonth, selectedDay } = this.state;
+    this.loadVariables(year, selectedMonth, selectedDay);
   };
 
   onMonthSelected = month => {
-    this.setState(
-      {
-        selectedMonth: month
-      },
-      this.triggerDateChange
-    );
+    const { selectedYear, selectedDay } = this.state;
+    this.loadVariables(selectedYear, month, selectedDay);
   };
 
   onDaySelected = day => {
-    this.setState(
-      {
-        selectedDay: day
-      },
-      this.triggerDateChange
-    );
+    const { selectedYear, selectedMonth } = this.state;
+    this.loadVariables(selectedYear, selectedMonth, day);
   };
 
   triggerDateChange = () => {
     const { selectedYear, selectedMonth, selectedDay } = this.state;
-    const date = moment(
-      `${selectedYear}${selectedMonth}${selectedDay}`,
-      'YYYYMMDD'
-    ).toDate();
-
+    const dateStr = `${selectedYear}${selectedMonth}${selectedDay}`;
+    const date = moment(dateStr, 'YYYYMMDD').toDate();
     this.props.onChange && this.props.onChange(date);
   };
 
