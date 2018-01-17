@@ -15,10 +15,9 @@ let deviceName = Cfg.get('device.id');
 let topic = '/devices/' + deviceName + '/events';
 //let stateTopic = '/devices/' + deviceName + '/state';
 let configTopic = '/devices/' + deviceName + '/config';
-print('Topic: ', topic);
 
 let gpsStatusPin = 33;
-let gsmStatusPin = 32; // connect to 32
+let gsmStatusPin = 32;
 let gsmSwitchPin = 14;
 
 GPIO.set_mode(gpsStatusPin, GPIO.MODE_OUTPUT);
@@ -57,19 +56,21 @@ function publishData() {
   return ok;
 }
 
+// Sleep function, turning off all LEDs and GSM modem.
 let updateTimerId = null;
 let gpsTimerId = null;
 function goToSleep() {
   print('Sleeping');
   Timer.del(gpsTimerId);
   Timer.del(updateTimerId);
-  GPIO.write(gpsStatusPin, 0); // Turn off gps led
-  GPIO.write(gsmStatusPin, 0); // Turn off gsm led
-  GPIO.write(gsmSwitchPin, 0); // Turn off gsm module
   Timer.set(
     8000,
     false,
     function() {
+      GPIO.write(gpsStatusPin, 0); // Turn off gps led
+      GPIO.write(gsmStatusPin, 0); // Turn off gsm led
+      GPIO.write(gsmSwitchPin, 0); // Turn off gsm module
+
       let updateInterval = Cfg.get('app.update_interval');
 
       ESP32.deepSleep(updateInterval * 1000 * 1000);
@@ -78,6 +79,8 @@ function goToSleep() {
   );
 }
 
+// Setup a timer that keep track of the time that the device is on but didn't send data yet.
+// After some tries it goes to sleep.
 let sendTelemetryTries = 0;
 function setUpdateTimer() {
   if (updateTimerId) {
@@ -92,7 +95,6 @@ function setUpdateTimer() {
       print('Should send telemetry');
       sendTelemetryTries = sendTelemetryTries + 1;
       if (sendTelemetryTries > 1 && !telemetrySend) {
-        //Sys.reboot(2 * 1000 * 1000);
         goToSleep();
       }
       telemetrySend = false;
@@ -102,6 +104,7 @@ function setUpdateTimer() {
 }
 setUpdateTimer();
 
+// Check if GPS has valid data.
 gpsTimerId = Timer.set(
   1000,
   true,
@@ -118,6 +121,8 @@ gpsTimerId = Timer.set(
   null
 );
 
+// Checks if is connected to mqtt server and GPS is locked
+// Then send data thought mqtt and if it's all ok, go to sleep
 Timer.set(
   5000,
   true,
@@ -134,6 +139,7 @@ Timer.set(
   null
 );
 
+// Subscribe to Cloud IoT Core configuration topic
 MQTT.sub(
   configTopic,
   function(conn, topic, msg) {
@@ -150,6 +156,7 @@ MQTT.sub(
   null
 );
 
+// Monitor connection with MQTT server
 MQTT.setEventHandler(function(conn, ev) {
   if (ev === MQTT.EV_CONNACK) {
     print('MQTT CONNECTED');

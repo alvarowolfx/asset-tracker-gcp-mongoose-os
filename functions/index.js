@@ -10,35 +10,15 @@ const db = admin.firestore();
 
 const DISTANCE_THRESHOLD = 0.05; // 50 meters
 
-const API_SCOPES = ['https://www.googleapis.com/auth/cloud-platform'];
-const API_VERSION = 'v1beta1';
-const DISCOVERY_API = 'https://cloudiot.googleapis.com/$discovery/rest';
-const SERVICE_NAME = 'cloudiot';
-const DISCOVERY_URL = `${DISCOVERY_API}?version=${API_VERSION}`;
-
 const PROJECT_ID = process.env.GCLOUD_PROJECT;
 const REGION = 'us-central1';
 const REGISTRY = 'asset-tracker-registry';
 
-function getCloudIoTClient() {
-  return new Promise((resolve, reject) => {
-    googleapis.auth.getApplicationDefault((err, auth, projectId) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      googleapis.discoverAPI(DISCOVERY_URL, { auth }, (err, service) => {
-        if (!err) {
-          resolve(service);
-        } else {
-          reject(err);
-        }
-      });
-    });
-  });
-}
-
+/**
+ * Receive a http request with deviceId and updateInterval, then
+ * call modifyCloudToDeviceConfig method of Cloud IoT Core
+ * to update the device configuration.
+ */
 exports.updateDeviceConfig = functions.https.onRequest((req, res) => {
   let { deviceId, updateInterval } = req.query;
 
@@ -93,8 +73,8 @@ exports.updateDeviceConfig = functions.https.onRequest((req, res) => {
 
 /**
  * Receive data from pubsub, then
- * Write telemetry raw data to bigquery
- * Maintain last data on firebase realtime database
+ * Maintain last device data on Firestore 'devices' collections then
+ * Write telemetry raw data to 'devices/location_logs' subcollection
  */
 exports.receiveTelemetry = functions.pubsub
   .topic('telemetry-topic')
@@ -151,6 +131,31 @@ exports.receiveTelemetry = functions.pubsub
       }
     });
   });
+
+const API_SCOPES = ['https://www.googleapis.com/auth/cloud-platform'];
+const API_VERSION = 'v1beta1';
+const DISCOVERY_API = 'https://cloudiot.googleapis.com/$discovery/rest';
+const SERVICE_NAME = 'cloudiot';
+const DISCOVERY_URL = `${DISCOVERY_API}?version=${API_VERSION}`;
+
+function getCloudIoTClient() {
+  return new Promise((resolve, reject) => {
+    googleapis.auth.getApplicationDefault((err, auth, projectId) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      googleapis.discoverAPI(DISCOVERY_URL, { auth }, (err, service) => {
+        if (!err) {
+          resolve(service);
+        } else {
+          reject(err);
+        }
+      });
+    });
+  });
+}
 
 /**
  * Maintain last status in Firestore
