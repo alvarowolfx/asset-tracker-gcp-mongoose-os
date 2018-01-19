@@ -32,6 +32,10 @@ class App extends Component {
     this.loadDevices();
   }
 
+  /**
+   * Listen to devices changes on Firestore
+   * and update the current state
+   */
   loadDevices() {
     const db = firebase.firestore();
     db.collection('devices').onSnapshot(snapshot => {
@@ -65,6 +69,10 @@ class App extends Component {
     this.toggleDialog();
   };
 
+  /**
+   * Load subcollection location_logs for the current device
+   * Filtered by the current selected date
+   */
   loadLocationLogs = async () => {
     const { devices, selectedDeviceIndex } = this.state;
     const device = devices[selectedDeviceIndex];
@@ -126,6 +134,10 @@ class App extends Component {
     });
   };
 
+  /**
+   * Update device config using http endpoint
+   * on Firebase Cloud Function
+   */
   handleUpdateConfig = async config => {
     const { devices, selectedDeviceIndex } = this.state;
     const device = devices[selectedDeviceIndex];

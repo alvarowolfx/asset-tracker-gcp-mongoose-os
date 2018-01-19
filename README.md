@@ -39,7 +39,7 @@ To use it we need to download and install it from the official website. Follow t
 * Install firebase tools: `npm install -g firebase-tools` or `yarn global add firebase-tools`
 * Install webapp dependencies: `npm install` or `yarn install`
 * Build React Application: `yarn run build` or `yarn run build`
-* Install functions dependencies: `cd functions && npm install` or `cd functions yarn install`
+* Install functions dependencies: `cd functions && npm install` or `cd functions && yarn install`
 * Associate project with Firebase: `firebase init`
 * Deploy all the things: `firebase deploy`
 
