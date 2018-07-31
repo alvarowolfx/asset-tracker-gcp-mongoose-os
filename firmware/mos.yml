@@ -2,9 +2,9 @@ author: Alvaro Viebrantz
 description: An asset tracker project
 version: 1.0
 
-libs_version: 1.21
-modules_version: 1.21
-mongoose_os_version: 1.21
+libs_version: 2.4.2
+modules_version: 2.4.2
+mongoose_os_version: 2.4.2
 
 # Optional. List of tags for online search.
 tags:
@@ -25,17 +25,17 @@ config_schema:
   - ["app", "o", {title: "App config"}]
   - ["app.update_interval", "i", 300, {title: "Update interval in seconds"}]
   - ["pppos.enable", true]
-  - ["pppos.uart_no", 1]        
+  - ["pppos.uart_no", 1]
   - ["pppos.baud_rate", 115200]
   - ["pppos.apn", "timbrasil.br"]
   - ["pppos.user", "tim"]
   - ["pppos.pass", "tim"]
-  - ["pppos.connect_cmd", "ATD*99***1#"]  
+  - ["pppos.connect_cmd", "ATD*99***1#"]
   - ["gps.uart_no", 2]
   - ["gps.baud_rate", 9600]
   - ["gps.update_interval", 2000]
   - ["wifi.sta.enable", false]
-  
+
 # List of libraries used by this app, in order of initialisation
 libs:
   - origin: https://github.com/mongoose-os-libs/ca-bundle
@@ -46,6 +46,7 @@ libs:
   - origin: https://github.com/mongoose-os-libs/pppos
   - origin: https://github.com/mongoose-os-libs/mjs
   - origin: https://github.com/mongoose-os-libs/mqtt
+  - origin: https://github.com/mongoose-os-libs/sntp
   - origin: https://github.com/mongoose-os-libs/gcp
   - origin: https://github.com/alvarowolfx/gps
 
