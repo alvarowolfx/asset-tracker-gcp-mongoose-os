@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 const Geopoint = require('geopoint');
 const googleapis = require('googleapis');
 
-admin.initializeApp(functions.config().firebase);
+admin.initializeApp();
 
 const GeoPointFirestore = admin.firestore.GeoPoint;
 const db = admin.firestore();
@@ -78,20 +78,21 @@ exports.updateDeviceConfig = functions.https.onRequest((req, res) => {
  */
 exports.receiveTelemetry = functions.pubsub
   .topic('telemetry-topic')
-  .onPublish(event => {
-    const attributes = event.data.attributes;
-    const message = event.data.json;
+  .onPublish((message, context) => {
+    const attributes = message.attributes;
+    const payload = message.json;
 
     const deviceId = attributes['deviceId'];
+    
     const data = {
       deviceId: deviceId,
-      timestamp: new Date(event.timestamp),
-      latitude: parseFloat(message.latlon.lat),
-      longitude: parseFloat(message.latlon.lon),
-      speed: parseFloat(message.latlon.sp),
-      deviceTemperature: message.temp,
-      deviceFreeRam: message.free_ram,
-      deviceTotalRam: message.total_ram
+      timestamp: new Date(context.timestamp),
+      latitude: parseFloat(payload.latlon.lat),
+      longitude: parseFloat(payload.latlon.lon),
+      speed: parseFloat(payload.latlon.sp),
+      deviceTemperature: payload.temp,
+      deviceFreeRam: payload.free_ram,
+      deviceTotalRam: payload.total_ram
     };
 
     let deviceRef = db.collection('devices').doc(deviceId);
